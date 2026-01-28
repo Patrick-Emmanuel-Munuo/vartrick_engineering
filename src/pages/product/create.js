@@ -21,23 +21,13 @@ const CreateProduct = React.memo((props) => {
     // eslint-disable-next-line
   }, []);
 
+  // Populate form for edit
   const populateForm = (product) => {
-    dispatch({
-      product_name: product.product_name,
-      product_code: product.product_code,
-      description: product.description,
-      location: product.location,
-      unit_of_measure: product.unit_of_measure,
-      available: product.available,
-      buying_price: product.buying_price,
-      selling_price: product.selling_price,
-      tax: product.tax,
-      profit_rate: product.profit_rate,
-      discount: product.discount,
-      status: product.status,
-    });
+    const { product_name, product_code, description, maker, unit_of_measure, available, buying_price, selling_price, profit_rate, discount, status } = product;
+    dispatch({ product_name, product_code, description, maker, unit_of_measure, available, buying_price, selling_price, profit_rate, discount, status });
   };
 
+  //handle submit
   const handleSubmit = async (event) => {
     try {
       event.preventDefault();
@@ -63,12 +53,11 @@ const CreateProduct = React.memo((props) => {
         product_name: state.product_name,
         product_code: state.product_code,
         description: state.description,
-        location: state.location,
+        maker: state.maker,
         unit_of_measure: state.unit_of_measure,
         available: parseFloat(state.available || 0).toFixed(3),
         buying_price: parseFloat(state.buying_price || 0).toFixed(3),
         selling_price: parseFloat(state.selling_price || 0).toFixed(3),
-        tax: parseFloat(state.tax || 0).toFixed(3),
         profit_rate: parseFloat(state.profit_rate || 0).toFixed(3),
         discount: parseFloat(state.discount || 0).toFixed(3),
         status: state.status
@@ -101,6 +90,27 @@ const CreateProduct = React.memo((props) => {
     }
   };
 
+  // auto calculate profit rate when buying_price, selling_price or discount changes
+  useEffect(() => {
+    const buying = parseFloat(state.buying_price);
+    const selling = parseFloat(state.selling_price);
+    const discount = parseFloat(state.discount) || 0;
+
+    if (!isNaN(buying) && buying > 0 && !isNaN(selling)) {
+    // calculate discounted selling price
+      const discountAmount = selling * (discount / 100);
+      const netSelling = selling - discountAmount;
+
+      const profitRate = ((netSelling - buying) / buying) * 100;
+
+      dispatch({ profit_rate: profitRate.toFixed(3) });
+    } else {
+      dispatch({ profit_rate: "0.000" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.buying_price, state.selling_price, state.discount]);
+
+
   return (
     <section className="section">
       <div className="row">
@@ -124,7 +134,7 @@ const CreateProduct = React.memo((props) => {
 
                   <div className="col-md-4 col-12">
                     <div className="form-group">
-                      <Input type="text" autoComplete="off" label="Location" name="location" value={state.location} error={state.location_error} onChange={handleInputChange} placeholder="Enter location" />
+                      <Input type="text" autoComplete="off" label="Manufacturer" name="maker" value={state.maker} error={state.maker_error} onChange={handleInputChange} placeholder="Enter manufacturer" />
                     </div>
                   </div>
 
@@ -149,12 +159,6 @@ const CreateProduct = React.memo((props) => {
                   <div className="col-md-4 col-12">
                     <div className="form-group">
                       <Input type="number" autoComplete="off" label="Selling Price" name="selling_price" value={state.selling_price} error={state.selling_price_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
-                    </div>
-                  </div>
-
-                  <div className="col-md-4 col-12">
-                    <div className="form-group">
-                      <Input type="number" autoComplete="off" label="Tax (%)" name="tax" value={state.tax} error={state.tax_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
                     </div>
                   </div>
 

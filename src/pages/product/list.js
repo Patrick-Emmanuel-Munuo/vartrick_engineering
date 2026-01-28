@@ -55,7 +55,6 @@ const Product_list = React.memo((props) => {
       available: parseFloat(product.available).toFixed(3),
       buying_price: parseFloat(product.buying_price).toFixed(3),
       selling_price: parseFloat(product.selling_price).toFixed(3),
-      tax: parseFloat(product.tax).toFixed(3),
       profit_rate: parseFloat(product.profit_rate).toFixed(3),
       discount: parseFloat(product.discount).toFixed(3)
     }));
@@ -67,12 +66,11 @@ const Product_list = React.memo((props) => {
     { key: "product_name", text: "Product Name", className: "center", width: "200px", sortable: true },
     { key: "product_code", text: "Code", className: "center", width: "100px", sortable: true },
     { key: "description", text: "Description", className: "center", width: "250px", sortable: false },
-    { key: "location", text: "Location", className: "center", width: "150px", sortable: true },
+    { key: "maker", text: "Maker", className: "center", width: "150px", sortable: true },
     { key: "unit_of_measure", text: "Unit", className: "center", width: "100px", sortable: true },
     { key: "available", text: "Available", className: "center", width: "100px", sortable: true },
     { key: "buying_price", text: "Buying Price", className: "center", width: "120px", sortable: true },
     { key: "selling_price", text: "Selling Price", className: "center", width: "120px", sortable: true },
-    { key: "tax", text: "Tax (%)", className: "center", width: "80px", sortable: true },
     { key: "profit_rate", text: "Profit Rate (%)", className: "center", width: "100px", sortable: true },
     { key: "discount", text: "Discount (%)", className: "center", width: "100px", sortable: true },
     {

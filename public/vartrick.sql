@@ -98,6 +98,7 @@ CREATE TABLE `product` (
   `updated_date` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
+  UNIQUE("product_code"),
   FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
   

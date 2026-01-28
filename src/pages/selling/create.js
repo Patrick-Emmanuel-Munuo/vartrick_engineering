@@ -1,201 +1,317 @@
 /* Required Modules */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input, Select, Option } from "../../components/form";
 import { Button } from "../../components/button";
-import { useLocation } from 'react-router-dom';
-import { permission, designations, encrypt } from '../../helpers/functions';
 
-const Create = React.memo((props) => {
+const CreateSellingProduct = React.memo((props) => {
   const { state, dispatch, handleInputChange, unMount } = props.application;
-  const pathname = useLocation();
-  const isEditMode = pathname.state && pathname.pathname === "/user/create";
 
+  // Local state
+  const [cart, setCart] = useState([]);
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [productSearchResults, setProductSearchResults] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [taxRate, setTaxRate] = useState(18);
+
+  // Default customer on load
   useEffect(() => {
-    if (isEditMode && permission(2001)) {
-      document.title = 'Edit User';
-      populateForm(pathname.state);
-    } else if (!isEditMode && permission(2003)) {
-      document.title = 'Create User';
-      fetchInitialData();
-    } else {
-      window.location.href = "/not-found";
-    }
+    dispatch({
+      customer_name: "Customer",
+      customer_phone: "",
+      customer_email: "",
+      customer_address: ""
+    });
     return () => unMount();
-    // eslint-disable-next-line
   }, []);
 
-  const populateForm = (user) => {
-    dispatch({
-      full_name: user.full_name,
-      user_name: user.user_name,
-      phone_number: user.phone_number,
-      address: user.address,
-      gender: user.gender,
-      designation: user.designation,
-      role_id: user.role_id,
-      status: user.status,
-      email: user.email,
-      department_id: user.department_id,
-    });
-    fetchInitialData();
-  };
-
-  const fetchInitialData = async () => {
+  // =========================
+  // CUSTOMER SEARCH
+  // =========================
+  const searchCustomer = async (customer) => {
+    if (!customer) return setCustomerSearchResults([]);
     try {
-      const deptRes = await props.application.post({
-        route: 'read',
-        body: { table: 'departments', condition: { delated: 0 }, select: { department_name: "", id: "" } }
+      const res = await props.application.post({
+        route: 'search',
+        body: {
+          table: 'customer',
+          condition: { full_name: customer },
+          select: { full_name: "", phone_number: "", email: "", address: "" }
+        }
       });
-      console.log(deptRes)
-      dispatch({ departments_lists: deptRes.success ? deptRes.message : [] });
-
-      const roleRes = await props.application.post({
-        route: 'read',
-        body: { table: 'roles', condition: { delated: 0 }, select: { name: "", id: "" } }
-      });
-      dispatch({ roles: roleRes.success ? roleRes.message : [] });
+      if (res?.success) setCustomerSearchResults(res.message);
     } catch (error) {
-      dispatch({ notification: error instanceof Error ? error.message : 'Error fetching data' });
+      console.error(error);
     }
   };
 
-const validatePhoneNumber = (phone) => /^\+[1-9]\d{7,14}$/.test(phone);
-
-const handleSubmit = async (event) => {
-  try {
-    event.preventDefault();
-    const errors = [];
-    // Validation rules
-    [
-      { field: 'full_name', message: 'Full name required' },
-      { field: 'user_name', message: 'Username required' },
-      { field: 'email', message: 'Email required' },
-      { field: 'address', message: 'Address required' },
-      { field: 'phone_number', message: 'Phone required', custom: validatePhoneNumber, customMessage: 'Invalid phone format +countrycodeXXXXXXXX' },
-      { field: 'gender', message: 'Gender required' },
-      { field: 'role_id', message: 'Role required' },
-      { field: 'designation', message: 'Designation required' },
-      { field: 'status', message: 'Status required' }
-    ].forEach(({ field, message }) => {
-      if (!(state[field] || "").trim()) {
-        errors.push(field);
-        dispatch({ [`${field}_error`]: message });
-      } else {
-        dispatch({ [`${field}_error`]: "" });
-      }
+  const selectCustomer = (customer) => {
+    dispatch({
+      customer_name: customer.full_name,
+      customer_phone: customer.phone_number,
+      customer_email: customer.email,
+      customer_address: customer.address
     });
-    if (errors.length) return;
-    // Payload for user creation/update
+    setCustomerSearchResults([]);
+  };
+
+  // =========================
+  // PRODUCT SEARCH
+  // =========================
+  const searchProduct = async (name) => {
+    if (!name) return setProductSearchResults([]);
+    try {
+      const res = await props.application.post({
+        route: 'search',
+        body: {
+          table: 'product',
+          condition: { product_name: name },
+          select: { id: "", product_name: "", product_code: "", selling_price: "", available: "" }
+        }
+      });
+      if (res?.success) setProductSearchResults(res.message);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleProductSelect = (productId) => {
+    setSelectedProductId(productId);
+    const product = productSearchResults.find(p => p.id === parseInt(productId));
+    if (product) addProductToCart(product);
+  };
+
+  // =========================
+  // CART MANAGEMENT
+  // =========================
+  const addProductToCart = (product) => {
+    const exists = cart.find(item => item.product_id === product.id);
+    if (exists) return; // prevent duplicate
+    setCart([...cart, {
+      product_id: product.id,
+      product_name: product.product_name,
+      product_code: product.product_code,
+      qty: 1,
+      unit_price: Number(product.selling_price),
+      total: Number(product.selling_price)
+    }]);
+    setSelectedProductId("");
+    setProductSearchResults([]);
+  };
+
+  const updateCartItem = (index, key, value) => {
+    const updated = [...cart];
+    updated[index][key] = key === "qty" || key === "unit_price" ? Number(value) : value;
+    updated[index].total = updated[index].qty * updated[index].unit_price;
+    setCart(updated);
+  };
+
+  const removeCartItem = (index) => {
+    const updated = [...cart];
+    updated.splice(index, 1);
+    setCart(updated);
+  };
+
+  const calculateTotals = () => {
+    const bill_amount = cart.reduce((sum, i) => sum + i.total, 0);
+    const tax = (bill_amount * taxRate) / 100;
+    return { bill_amount, tax, invoice_amount: bill_amount + tax };
+  };
+
+  // =========================
+  // SUBMIT SELLING PRODUCT
+  // =========================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!state.customer_name) return dispatch({ notification: "Customer name required" });
+    if (!cart.length) return dispatch({ notification: "Add at least one product" });
+
+    const totals = calculateTotals();
     const payload = {
-      full_name: state.full_name,
-      user_name: state.user_name,
-      phone_number: state.phone_number,
-      email: state.email,
-      address: state.address,
-      gender: state.gender,
-      role_id: state.role_id,
-      designation: state.designation,
-      department_id: state.department_id,
-      status: state.status,
+      customer_name: state.customer_name,
+      customer_phone: state.customer_phone,
+      customer_email: state.customer_email,
+      customer_address: state.customer_address,
+      invoice_number: state.invoice_number,
+      items: cart,
+      bill_amount: totals.bill_amount,
+      tax_rate: taxRate,
+      tax: totals.tax,
+      invoice_amount: totals.invoice_amount,
+      payment_method: state.payment_method,
+      payment_comment: state.payment_comment,
+      status: state.status || "pending"
     };
-    let response;
-    if (isEditMode) {
-      // Edit user
-      response = await props.application.post({
-        route: 'update',
-        body: { table: 'users', condition: { user_name: pathname.state.user_name }, data: payload }
-      });
-    } else {
-      // Single user creation (commented)
-      //create user
-      payload.password = encrypt({ password: "Bmh@2025" }).encrypted || "";
-      response = await props.application.post({
+
+    try {
+      dispatch({ loading: true });
+      const response = await props.application.post({
         route: 'create',
-        body: { table: 'users', data: payload }
+        body: { table: 'selling_product', data: payload }
       });
+      dispatch({ loading: false });
+      if (response?.success) {
+        dispatch({ notification: "Invoice created successfully!" });
+        setCart([]);
+      } else {
+        dispatch({ notification: response?.message || "Operation failed!" });
+      }
+    } catch (error) {
+      dispatch({ loading: false });
+      dispatch({ notification: error.message || "Unknown error" });
     }
-    // Final response handling
-    if (response?.success) {
-      dispatch({ notification: isEditMode ? "User updated successfully!" : "All users created successfully!" });
-      window.location.pathname = isEditMode ? '/user/list' : '/user/create';
-    } else if (response) {
-      dispatch({ notification: response.message });
-    }
-  } catch (error) {
-    dispatch({ notification: error instanceof Error ? error.message : 'Error during operation' });
-  }
-};
+  };
 
-
-const renderDepartments = () => state.departments_lists?.map((d, i) => <Option key={i} value={d.id} label={d.department_name} />);
-const renderRoles = () => state.roles?.map((r, i) => <Option key={i} value={r.id} label={r.name} />);
-const renderDesignations = () => designations.map((d, i) => <Option key={i} value={d.name} label={d.name} />);
+  const totals = calculateTotals();
 
   return (
     <section className="section">
       <div className="row">
         <div className="col-lg-12">
-          <div className="card">
+          <div className="card shadow-sm">
             <div className="card-body">
-              <form className="form" onSubmit={handleSubmit}>
-                <div className="row">
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Full Name" name="full_name" value = {state.full_name} error={state.full_name_error} onChange={handleInputChange} placeholder="Enter full name" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Username" name="user_name" value = {state.user_name} error={state.user_name_error} onChange={handleInputChange} placeholder="Enter username" disabled={isEditMode} />
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Address" name="address" value= {state.address} error={state.address_error} onChange={handleInputChange} placeholder="Enter address" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Phone" name="phone_number" value ={state.phone_number} error={state.phone_number_error} onChange={handleInputChange} placeholder="Number e.g. +255712345678" />
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Email" name="email" value= {state.email} error={state.email_error} onChange={handleInputChange} placeholder="Enter email" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="department_id" value={state.department_id || ""} onChange={handleInputChange} label="Department" error={state.department_error}>
-                      <Option value="" label="Select department" />
-                      {renderDepartments()}
-                    </Select>
-                  </div></div>
+              <form onSubmit={handleSubmit}>
 
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="gender" value={state.gender || ""} onChange={handleInputChange} label="Gender" error={state.gender_error} disabled={isEditMode}>
-                      <Option value="" label="Select Gender" />
-                      <Option value="male" label="Male" />
-                      <Option value="female" label="Female" />
-                    </Select>
-                  </div></div>
-
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="role_id" value={state.role_id || ""} onChange={handleInputChange} label="Role" error={state.role_id_error} disabled={!permission(3001)}>
-                      <Option value="" label="Select role" />
-                      {renderRoles()}
-                    </Select>
-                  </div></div>
-
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="designation" value={state.designation || ""} onChange={handleInputChange} label="Designation" error={state.designation_error}>
-                      <Option value="" label="Select designation" />
-                      {renderDesignations()}
-                    </Select>
-                  </div></div>
-
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="status" value={state.status || ""} onChange={handleInputChange} label="Status" error={state.status_error}>
-                      <Option value="" label="Select status" />
-                      <Option value="active" label="Active" />
-                      <Option value="inactive" label="Inactive" />
-                    </Select>
-                  </div></div>
-
-                  <div className="col-12 d-flex justify-content-center mt-3">
-                    <Button className="btn btn-info" loading={state.loading} title={isEditMode ? "Edit" : "Save"} />
+                {/* CUSTOMER SECTION */}
+                <h5 className="mb-3">Customer Info</h5>
+                <div className="row mb-4">
+                  <div className="col-md-6">
+                    <Input
+                      type="text"
+                      label="Customer Name"
+                      name="customer_name"
+                      value={state.customer_name}
+                      onChange={(e) => { handleInputChange(e); searchCustomer(e.target.value); }}
+                    />
+                    {customerSearchResults.length > 0 && (
+                      <div className="search-results border rounded p-2 bg-white shadow-sm">
+                        {customerSearchResults.map((c, i) => (
+                          <div
+                            key={i}
+                            className="search-item p-2 mb-1 rounded hover-bg cursor-pointer"
+                            onClick={() => selectCustomer(c)}
+                          >
+                            {c.full_name} ({c.phone_number})
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
+                  <div className="col-md-6">
+                    <Input type="text" label="Phone" name="customer_phone" value={state.customer_phone} onChange={handleInputChange} />
+                  </div>
+                  <div className="col-md-6 mt-2">
+                    <Input type="text" label="Email" name="customer_email" value={state.customer_email} onChange={handleInputChange} />
+                  </div>
+                  <div className="col-md-6 mt-2">
+                    <Input type="text" label="Address" name="customer_address" value={state.customer_address} onChange={handleInputChange} />
+                  </div>
                 </div>
+
+                {/* PRODUCT SEARCH */}
+                <h5 className="mb-3">Products</h5>
+                <div className="row mb-3">
+                  <div className="col-md-12">
+                    <Input
+                      type="text"
+                      label="Search Product"
+                      placeholder="Enter product name or code"
+                      onChange={(e) => searchProduct(e.target.value)}
+                    />
+                    <Select
+                      name="product_id"
+                      value={selectedProductId}
+                      onChange={(e) => handleProductSelect(e.target.value)}
+                      label="Select Product"
+                    >
+                      <Option value="" label="Search or select product" />
+                      {productSearchResults.map((p, i) => (
+                        <Option
+                          key={i}
+                          value={p.id}
+                          label={`${p.product_name} | ${p.product_code} | $${Number(p.selling_price).toFixed(2)}`}
+                        />
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+
+                {/* CART ITEMS */}
+                <h5 className="mb-3">Cart Items</h5>
+                <div className="cart-container border p-3 rounded bg-light">
+                  {cart.length === 0 && (
+                    <div className="text-center text-muted py-3">No products added to the cart yet.</div>
+                  )}
+
+                  {cart.map((item, i) => (
+                    <div key={i} className="cart-item d-flex align-items-center justify-content-between rounded shadow-sm">
+                      <div className="flex-grow-1">
+                        <strong>{item.product_name}</strong> <span className="text-muted">({item.product_code})</span>
+                      </div>
+
+                      <div className="mx-2" style={{ width: "80px" }}>
+                        <Input
+                          type="number"
+                          value={item.qty}
+                          min={1}
+                          onChange={(e) => updateCartItem(i, 'qty', e.target.value)}
+                          label="Qty"
+                        />
+                      </div>
+
+                      <div className="mx-2" style={{ width: "100px" }}>
+                        <Input
+                          type="number"
+                          value={item.unit_price}
+                          min={0}
+                          onChange={(e) => updateCartItem(i, 'unit_price', e.target.value)}
+                          label="Unit Price"
+                        />
+                      </div>
+
+                      <div className="mx-2" style={{ width: "100px" }}>
+                        <Input
+                          type="number"
+                          value={item.total.toFixed(2)}
+                          disabled
+                          label="Total"
+                        />
+                      </div>
+
+                      <div className="mx-2" style={{ width: "40px" }}>
+                        <Button
+                          className="btn btn-danger"
+                          title="🗑"
+                          onClick={() => removeCartItem(i)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* TOTALS */}
+                  {cart.length > 0 && (
+                    <div className="cart-totals mt-4 p-3 bg-white rounded shadow-sm d-flex justify-content-end">
+                      <div style={{ width: "250px" }}>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span>Bill Amount:</span>
+                          <strong>${totals.bill_amount.toFixed(2)}</strong>
+                        </div>
+                        <div className="d-flex justify-content-between mb-2">
+                          <span>Tax ({taxRate}%):</span>
+                          <strong>${totals.tax.toFixed(2)}</strong>
+                        </div>
+                        <div className="d-flex justify-content-between">
+                          <span>Invoice Total:</span>
+                          <strong>${totals.invoice_amount.toFixed(2)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="col-12 d-flex justify-content-center mt-4">
+                  <Button className="btn btn-success" title="Save Invoice" loading={state.loading} />
+                </div>
+
               </form>
             </div>
           </div>
@@ -205,4 +321,4 @@ const renderDesignations = () => designations.map((d, i) => <Option key={i} valu
   );
 });
 
-export default Create;
+export default CreateSellingProduct;
