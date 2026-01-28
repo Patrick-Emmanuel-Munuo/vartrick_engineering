@@ -6,7 +6,7 @@ const routes = [
     {
         path: '/',
         guest: true,
-        component: lazy(() => import('../pages/user/login'))
+        component: lazy(() => import('../pages/home'))
     },
     {
         path: '/forgot-password',
@@ -23,87 +23,56 @@ const routes = [
         guest: false,
         component: lazy(() => import('../pages/dashboard')) //test
     },
-    //department_menu
+    //shop_menu
     {
-        path: '/department/list',
+        path: '/shop/list',
         guest: false,
         component: lazy(() => import('../pages/department/lists'))
     },
     {
-        path: '/department/create',
+        path: '/shop/create',
         guest: false,
         component: lazy(() => import('../pages/department/create'))
     },
-   
-   
-    //maintanance menu
-    {
-        path: '/maintanance/create',
-        guest: false,
-        component: lazy(() => import('../pages/maintanance/create'))
-    },
-    {
-        path: '/maintanance/list',
-        guest: false,
-        component: lazy(() => import('../pages/maintanance/lists'))
-    },
-    {
-        path: '/maintanance/inspection',
-        guest: false,
-        component: lazy(() => import('../pages/maintanance/inspection'))
-    },
-    {
-        path: '/maintanance/inspection-report',
-        guest: false,
-        component: lazy(() => import('../pages/maintanance/inspection_report'))
-    },
-    {
-        path: '/maintanance/service',
-        guest: false,
-        component: lazy(() => import('../pages/maintanance/service'))
-    },
 
-
-    //job menu
+    //product menu
     {
-        path: '/job/list',
+        path: '/product/list',
         guest: false,
-        component: lazy(() => import('../pages/job/lists'))
+        component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/job/create',
+        path: '/product/create',
         guest: false,
-        component: lazy(() => import('../pages/job/create'))
+        component: lazy(() => import('../pages/dashboard'))
+    },
+    //selling menu
+    {
+        path: '/selling/list',
+        guest: false,
+        component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/job/attempt',
+        path: '/selling/create',
         guest: false,
-        component: lazy(() => import('../pages/job/attempt'))
+        component: lazy(() => import('../pages/dashboard'))
+        //component: lazy(() => import('../pages/selling/create'))
     },
     {
-        path: '/job/assigned',
+        path: '/selling/attempt',
         guest: false,
-        component: lazy(() => import('../pages/job/assigned'))
+        component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/job/report',
+        path: '/selling/assigned',
         guest: false,
-        component: lazy(() => import('../pages/job/report'))
-    },
-    //task
-    /*
-    {
-        path: '/job/task',
-        guest: false,
-        component: lazy(() => import('../pages/job/task'))
+        component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/job/task_attempt',
+        path: '/selling/report',
         guest: false,
-        component: lazy(() => import('../pages/job/task_attempt'))
-    },*/
-
-
+        component: lazy(() => import('../pages/dashboard'))
+    },
 
     //role menu
     {
