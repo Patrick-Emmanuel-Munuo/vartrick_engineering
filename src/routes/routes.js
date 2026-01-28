@@ -1,12 +1,11 @@
-/* require modules */
 import { lazy } from 'react'
 
-/* create an array for routes to various pages */
 const routes = [
+    // ===== Guest routes =====
     {
         path: '/',
         guest: true,
-        component: lazy(() => import('../pages/home'))
+        component: lazy(() => import('../pages/user/login'))
     },
     {
         path: '/forgot-password',
@@ -18,63 +17,68 @@ const routes = [
         guest: true,
         component: lazy(() => import('../pages/user/registration'))
     },
+
+    // ===== Auth routes =====
     {
         path: '/dashboard',
         guest: false,
-        component: lazy(() => import('../pages/dashboard')) //test
-    },
-    //shop_menu
-    {
-        path: '/shop/list',
-        guest: false,
-        component: lazy(() => import('../pages/department/lists'))
-    },
-    {
-        path: '/shop/create',
-        guest: false,
-        component: lazy(() => import('../pages/department/create'))
-    },
-
-    //product menu
-    {
-        path: '/product/list',
-        guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
+
+    // ===== Product =====
     {
         path: '/product/create',
         guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
-    //selling menu
     {
-        path: '/selling/list',
+        path: '/product/supply',
         guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/selling/create',
-        guest: false,
-        component: lazy(() => import('../pages/dashboard'))
-        //component: lazy(() => import('../pages/selling/create'))
-    },
-    {
-        path: '/selling/attempt',
+        path: '/product/bulk-create',
         guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/selling/assigned',
+        path: '/product/stock-update',
         guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
     {
-        path: '/selling/report',
+        path: '/product/list',
         guest: false,
         component: lazy(() => import('../pages/dashboard'))
     },
 
-    //role menu
+    // ===== Selling =====
+    { 
+        path: '/selling/list', 
+        guest: false, 
+        component: lazy(() => import('../pages/dashboard')) 
+    },
+    { 
+        path: '/selling/create', 
+        guest: false, 
+        component: lazy(() => import('../pages/dashboard')) 
+    },
+    { 
+        path: '/selling/customer', 
+        guest: false, 
+        component: lazy(() => import('../pages/dashboard')) 
+    },
+    { 
+        path: '/selling/invoice', 
+        guest: false, 
+        component: lazy(() => import('../pages/dashboard')) 
+    },
+    { 
+        path: '/selling/report', 
+        guest: false, 
+        component: lazy(() => import('../pages/dashboard')) 
+    },
+    // ===== Roles =====
     {
         path: '/role/list',
         guest: false,
@@ -85,7 +89,8 @@ const routes = [
         guest: false,
         component: lazy(() => import('../pages/roles/create'))
     },
-    //user_menu
+
+    // ===== Users =====
     {
         path: '/user/list',
         guest: false,
@@ -107,11 +112,6 @@ const routes = [
         component: lazy(() => import('../pages/user/history'))
     },
     {
-        path: '/user/forgot-password',
-        guest: true,
-        component: lazy(() => import('../pages/user/forgot-password'))
-    },
-    {
         path: '/user/password',
         guest: false,
         component: lazy(() => import('../pages/user/password'))
@@ -122,11 +122,9 @@ const routes = [
         component: lazy(() => import('../pages/user/reset-password'))
     },
 
-
-    
-    // error path routers should be at the bottom always
+    // ===== Errors (ALWAYS LAST) =====
     {
-        path: 'not-found',
+        path: '/not-found',
         guest: false,
         component: lazy(() => import('../pages/page-not-found'))
     },
@@ -134,13 +132,7 @@ const routes = [
         path: '*',
         guest: false,
         component: lazy(() => import('../pages/page-not-found'))
-    },
-    {
-        path: '*',
-        guest: true,
-        component: lazy(() => import('../pages/user/login'))
     }
 ]
 
-/* export routes for global accessibility */
 export default routes

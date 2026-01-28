@@ -10,7 +10,7 @@ const encryption_key = process.env.REACT_APP_ENCRIPTION_KEY; // must be 16 chars
 
 // Server URLs
 export const url = "http://localhost:2000"//process.env.REACT_APP_BACKEND_SERVER ??"http://192.168.15.159:2000"
-export const socketURL = "http://localhost:1000"
+export const socketURL = "http://localhost:2000"
 export const serverUrl = url + "/api/v1";
 export const applicationName = process.env.REACT_APP_APP_NAME ?? "Vartrick System";
 
@@ -169,7 +169,7 @@ export const getInfo = (key, info) => {
 // Encryption
 export function encrypt(data) {
   try {
-    if (!enable_encryption) return data;
+    if (!enable_encryption) return { data };
     if (!encryption_key || encryption_key.length !== 16)
       throw new Error("Encryption key must be 16 characters long");
     if (!initialization_vector || initialization_vector.length !== 16)
@@ -177,15 +177,15 @@ export function encrypt(data) {
 
     const key = CryptoJS.enc.Utf8.parse(encryption_key);
     const iv = CryptoJS.enc.Utf8.parse(initialization_vector);
-    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(data), key, {
+    const encrypted_data = CryptoJS.AES.encrypt(JSON.stringify(data), key, {
       iv,
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Pkcs7,
     }).toString();
-    return { encrypted };
+    return { data: encrypted_data };
   } catch (error) {
     console.error("Encrypt function error:", error?.message ?? error);
-    return { success: false, message: error?.message ?? "Encrypt error" };
+    return { data: { success: false, message: error?.message ?? "Encrypt error" } };
   }
 }
 // Decryption

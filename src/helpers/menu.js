@@ -2,169 +2,71 @@ import { permission } from "./functions";
 
 const menus = [
   {
-    title: "dashboard",
+    title: "Dashboard",
     link: "/dashboard",
     icon: "dashboard",
-    visible: (9000),
-  },
-
-  {
-    title: "Departments",
-    link: "#",
-    icon: "verified",
     visible: permission(1000),
-    hasSubMenu: true,
-    subMenu: [
-      {
-        title: "Create",
-        link: "/department/create",
-        visible: permission(1003),
-      },
-      {
-        title: "lists",
-        link: "/department/list",
-        visible: permission(1004),
-      },
-    ],
   },
 
+  // ===== Users =====
   {
-    title: "user",
+    title: "Users",
     link: "#",
     icon: "groups",
     visible: permission(2000),
     hasSubMenu: true,
     subMenu: [
-      {
-        title: "create",
-        link: "/user/create",
-        visible: permission(2003),
-      },
-      {
-        title: "bulk-create",
-        link: "/user/bulk",
-        visible: permission(2003),
-      },
-      {
-        title: "list",
-        link: "/user/list",
-        visible: permission(2004) || permission(2005),
-      },
-      {
-        title: "password",
-        link: "/user/password",
-        visible: permission(2007), // newly added permission ID
-      },
-      {
-        title: "reset-password",
-        link: "/user/reset-password",
-        visible: permission(2006)|| permission(2009),
-      },
-      {
-        title: "login history",
-        link: "/user/history",
-        visible: permission(2008), // newly added permission ID
-      },
+      { title: "Create", link: "/user/create", visible: permission(2001) },
+      { title: "Bulk Create", link: "/user/bulk", visible: permission(2002) },
+      { title: "List", link: "/user/list", visible: permission(2004) || permission(2005) },
+      { title: "Password", link: "/user/password", visible: permission(2007) },
+      { title: "Reset Password", link: "/user/reset-password", visible: permission(2006) || permission(2009) },
+      { title: "Login History", link: "/user/history", visible: permission(2008) },
     ],
   },
 
+  // ===== Products =====
   {
-    title: "Job",
+    title: "Products",
     link: "#",
-    icon: "home_repair_service",
+    icon: "inventory_2",
     visible: permission(4000),
     hasSubMenu: true,
     subMenu: [
-      {
-        title: "Request",
-        link: "/job/create",
-        visible: permission(4001),
-      },
-      {
-        title: "assign",
-        link: "/job/assigned",
-        visible: permission(4002),
-      },
-      {
-        title: "job list",
-        link: "/job/list",
-        visible: permission(4006)||permission(4007)||permission(4008),
-      },
-      {
-        title: "attempt",
-        link: "/job/attempt",
-        visible: permission(4003)||permission(4005),
-      },/*
-      {
-        title: "create_task",
-        link: "/job/task",
-        visible: permission(4005),
-      },
-      {
-        title: "task_attempt",
-        link: "/job/task_attempt",
-        visible: permission(4006),
-      },*/
-      {
-        title: "Report",
-        link: "/job/report",
-        visible: permission(4009),
-      },
+      { title: "Create", link: "/product/create", visible: permission(4001) },
+      { title: "Supply", link: "/product/supply", visible: permission(4002) },
+      { title: "Bulk Create", link: "/product/bulk-create", visible: permission(4003) },
+      { title: "Stock Update", link: "/product/stock-update", visible: permission(4004) },
+      { title: "List", link: "/product/list", visible: permission(4005) },
     ],
   },
 
+  // ===== Selling =====
   {
-    title: "maintanance",
+    title: "Selling",
     link: "#",
-    icon: "home_repair_service",
+    icon: "shopping_cart",
     visible: permission(5000),
     hasSubMenu: true,
     subMenu: [
-      {
-        title: "inventory",
-        link: "/maintanance/create",
-        visible: permission(5001),
-      },
-      {
-        title: "inventory-list",
-        link: "/maintanance/list",
-        visible: permission(5002),
-      },
-      {
-        title: "inspection",
-        link: "/maintanance/inspection",
-        visible: true,//permission(5002),
-      },
-      {
-        title: "inspection-report",
-        link: "/maintanance/inspection-report",
-        visible: true,//permission(5002),
-      },
-      {
-        title: "service",
-        link: "/maintanance/service",
-        visible: permission(5005),
-      },
+      { title: "Create Sale", link: "/selling/create", visible: permission(5001) },
+      { title: "List Sales", link: "/selling/list", visible: permission(5002) },
+      { title: "Customer", link: "/selling/customer", visible: permission(5003) },
+      { title: "Invoice", link: "/selling/invoice", visible: permission(5004) },
+      { title: "Report", link: "/selling/report", visible: permission(5005) },
     ],
   },
 
+  // ===== Roles =====
   {
     title: "Roles",
     link: "#",
-    icon: "groups",
+    icon: "admin_panel_settings",
     visible: permission(3000),
     hasSubMenu: true,
     subMenu: [
-      {
-        title: "create",
-        link: "/role/create",
-        visible: permission(3003),
-      },
-      {
-        title: "list",
-        link: "/role/list",
-        visible: permission(3004),
-      },
+      { title: "Create", link: "/role/create", visible: permission(3003) },
+      { title: "List", link: "/role/list", visible: permission(3004) },
     ],
   },
 ];

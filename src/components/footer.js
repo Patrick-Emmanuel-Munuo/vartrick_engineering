@@ -5,30 +5,7 @@ const Footer = React.memo(() => {
 
   return (
     <footer id="footer" className="footer hide-on-print">
-      <div className="footer-container">
-
-        {/* Company Info */}
-        <div className="footer-section">
-          <h4>Vartrick Engineering</h4>
-          <p>
-            Professional electrical engineering, supply, installation, and
-            maintenance services across Tanzania.
-          </p>
-        </div>
-
-        {/* Contact Details */}
-        <div className="footer-section">
-          <h4>Contact Us</h4>
-          <p><strong>Phone:</strong> +255 625 449 995</p>
-          <p><strong>Email:</strong> info@vartrick.or.tz</p>
-          <p><strong>Location:</strong> Dodoma, Tanzania</p>
-        </div>
-,
-        {/* Quick Links */}
-
-
-      </div>
-
+      {/* Company Info */}
       {/* Bottom Bar */}
       <div className="footer-bottom">
         <div className="copyright">
@@ -38,7 +15,6 @@ const Footer = React.memo(() => {
           </a>
           . All Rights Reserved.
         </div>
-
         <div className="credits">
           Designed by{" "}
           <a href="tel:+25562544995">Vartrick Developer Team</a>

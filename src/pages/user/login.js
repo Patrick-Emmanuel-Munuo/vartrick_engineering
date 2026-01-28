@@ -32,7 +32,7 @@ const Login = React.memo((props) => {
                     //select: { role_id: "", id: "" },
                 },
             });
-            console.log(response)
+            //console.log(response)
             if (response.success) {
                 const user = response.message;
                 storage.store("token", user[0].token? user[0].token : "");

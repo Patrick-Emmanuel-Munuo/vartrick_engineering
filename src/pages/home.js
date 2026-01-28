@@ -103,7 +103,6 @@ const Dashboard = (props) => {
     ))
   , [menus, state]);
 
-  //if (!permission(9000)) return <Navigate to="/not-found" replace />;
 
   return (
     <section className="section">
@@ -180,4 +179,4 @@ const Dashboard = (props) => {
   );
 };
 
-export default React.memo(Dashboard);
+export default React.memo(Home);

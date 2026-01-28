@@ -73,10 +73,8 @@ import { serverUrl, storage, decrypt, encrypt, enable_encryption } from "./funct
         response = await response.json()
         this.dispatch({loading: false})
         // returning response
-        if (enable_encryption) {
-            response = decrypt(response)
-        }
-        return response
+        let result = decrypt(response.data);
+        return result
     } catch (error) {
         this.dispatch({loading: false})
         if (error instanceof Error){
@@ -100,7 +98,7 @@ import { serverUrl, storage, decrypt, encrypt, enable_encryption } from "./funct
             body: JSON.stringify(encrypt(body)), // send JSON
             headers:this.headers
         })
-        //console.log({headers: this.headers})
+        console.log({sent_body: JSON.stringify(encrypt(body))})
         //check for authorization
         if (response.status === 401) { // Unauthorized
             this.dispatch({ notification: 'Session expired. Please log in again.' });
@@ -108,10 +106,8 @@ import { serverUrl, storage, decrypt, encrypt, enable_encryption } from "./funct
         }
         response = await response.json();
         this.dispatch({ loading: false });
-        if (enable_encryption && response.encrypted) {
-            response = decrypt(response.encrypted);
-        }
-        return response;
+        let result = decrypt(response.data);
+        return result;
     } catch (error) {
         this.dispatch({loading: false})
         if (error instanceof Error){
@@ -143,10 +139,8 @@ put= async (options) =>{
         response = await response.json()
         this.dispatch({loading: false})
         // returning response
-        if (enable_encryption) {
-            response = decrypt(response)
-        }
-        return response
+        let result = decrypt(response.data);
+        return result
     } catch (error) {
         this.dispatch({loading: false})
         if (error instanceof Error){
