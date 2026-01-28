@@ -3,20 +3,17 @@ import React, { useEffect } from 'react';
 import { Input, Select, Option } from "../../components/form";
 import { Button } from "../../components/button";
 import { useLocation } from 'react-router-dom';
-import { permission, designations, encrypt } from '../../helpers/functions';
+import { permission } from '../../helpers/functions';
 
-const Create = React.memo((props) => {
+const CreateProduct = React.memo((props) => {
   const { state, dispatch, handleInputChange, unMount } = props.application;
   const pathname = useLocation();
-  const isEditMode = pathname.state && pathname.pathname === "/user/create";
+  const isEditMode = pathname.state && pathname.pathname === "/product/create";
 
   useEffect(() => {
-    if (isEditMode && permission(2001)) {
-      document.title = 'Edit User';
-      populateForm(pathname.state);
-    } else if (!isEditMode && permission(2003)) {
-      document.title = 'Create User';
-      fetchInitialData();
+    if ((isEditMode && permission(3003)) || (!isEditMode && permission(3001))) {
+      document.title = isEditMode ? 'Edit Product' : 'Create Product';
+      if (isEditMode) populateForm(pathname.state);
     } else {
       window.location.href = "/not-found";
     }
@@ -24,112 +21,85 @@ const Create = React.memo((props) => {
     // eslint-disable-next-line
   }, []);
 
-  const populateForm = (user) => {
+  const populateForm = (product) => {
     dispatch({
-      full_name: user.full_name,
-      user_name: user.user_name,
-      phone_number: user.phone_number,
-      address: user.address,
-      gender: user.gender,
-      designation: user.designation,
-      role_id: user.role_id,
-      status: user.status,
-      email: user.email,
-      department_id: user.department_id,
+      product_name: product.product_name,
+      product_code: product.product_code,
+      description: product.description,
+      location: product.location,
+      unit_of_measure: product.unit_of_measure,
+      available: product.available,
+      buying_price: product.buying_price,
+      selling_price: product.selling_price,
+      tax: product.tax,
+      profit_rate: product.profit_rate,
+      discount: product.discount,
+      status: product.status,
     });
-    fetchInitialData();
   };
 
-  const fetchInitialData = async () => {
+  const handleSubmit = async (event) => {
     try {
-      const deptRes = await props.application.post({
-        route: 'read',
-        body: { table: 'departments', condition: { delated: 0 }, select: { department_name: "", id: "" } }
-      });
-      console.log(deptRes)
-      dispatch({ departments_lists: deptRes.success ? deptRes.message : [] });
+      event.preventDefault();
+      const errors = [];
 
-      const roleRes = await props.application.post({
-        route: 'read',
-        body: { table: 'roles', condition: { delated: 0 }, select: { name: "", id: "" } }
+      // Validation rules
+      [
+        { field: 'product_name', message: 'Product name required' },
+        { field: 'selling_price', message: 'Selling price required' },
+        { field: 'status', message: 'Status required' }
+      ].forEach(({ field, message }) => {
+        if (!(state[field] || "").toString().trim()) {
+          errors.push(field);
+          dispatch({ [`${field}_error`]: message });
+        } else {
+          dispatch({ [`${field}_error`]: "" });
+        }
       });
-      dispatch({ roles: roleRes.success ? roleRes.message : [] });
+
+      if (errors.length) return;
+
+      const payload = {
+        product_name: state.product_name,
+        product_code: state.product_code,
+        description: state.description,
+        location: state.location,
+        unit_of_measure: state.unit_of_measure,
+        available: parseFloat(state.available || 0).toFixed(3),
+        buying_price: parseFloat(state.buying_price || 0).toFixed(3),
+        selling_price: parseFloat(state.selling_price || 0).toFixed(3),
+        tax: parseFloat(state.tax || 0).toFixed(3),
+        profit_rate: parseFloat(state.profit_rate || 0).toFixed(3),
+        discount: parseFloat(state.discount || 0).toFixed(3),
+        status: state.status
+      };
+
+      let response;
+      if (isEditMode) {
+        // Update product
+        response = await props.application.post({
+          route: 'update',
+          body: { table: 'product', condition: { id: pathname.state.id }, data: payload }
+        });
+      } else {
+        // Create new product
+        response = await props.application.post({
+          route: 'create',
+          body: { table: 'product', data: payload }
+        });
+      }
+
+      if (response?.success) {
+        dispatch({ notification: isEditMode ? "Product updated successfully!" : "Product created successfully!" });
+        window.location.pathname = '/product/list';
+      } else if (response) {
+        dispatch({ notification: response.message });
+      }
+
     } catch (error) {
-      dispatch({ notification: error instanceof Error ? error.message : 'Error fetching data' });
+      dispatch({ notification: error instanceof Error ? error.message : 'Error during operation' });
     }
   };
-
-const validatePhoneNumber = (phone) => /^\+[1-9]\d{7,14}$/.test(phone);
-
-const handleSubmit = async (event) => {
-  try {
-    event.preventDefault();
-    const errors = [];
-    // Validation rules
-    [
-      { field: 'full_name', message: 'Full name required' },
-      { field: 'user_name', message: 'Username required' },
-      { field: 'email', message: 'Email required' },
-      { field: 'address', message: 'Address required' },
-      { field: 'phone_number', message: 'Phone required', custom: validatePhoneNumber, customMessage: 'Invalid phone format +countrycodeXXXXXXXX' },
-      { field: 'gender', message: 'Gender required' },
-      { field: 'role_id', message: 'Role required' },
-      { field: 'designation', message: 'Designation required' },
-      { field: 'status', message: 'Status required' }
-    ].forEach(({ field, message }) => {
-      if (!(state[field] || "").trim()) {
-        errors.push(field);
-        dispatch({ [`${field}_error`]: message });
-      } else {
-        dispatch({ [`${field}_error`]: "" });
-      }
-    });
-    if (errors.length) return;
-    // Payload for user creation/update
-    const payload = {
-      full_name: state.full_name,
-      user_name: state.user_name,
-      phone_number: state.phone_number,
-      email: state.email,
-      address: state.address,
-      gender: state.gender,
-      role_id: state.role_id,
-      designation: state.designation,
-      department_id: state.department_id,
-      status: state.status,
-    };
-    let response;
-    if (isEditMode) {
-      // Edit user
-      response = await props.application.post({
-        route: 'update',
-        body: { table: 'users', condition: { user_name: pathname.state.user_name }, data: payload }
-      });
-    } else {
-      // Single user creation (commented)
-      //create user
-      payload.password = encrypt({ password: "Bmh@2025" }).encrypted || "";
-      response = await props.application.post({
-        route: 'create',
-        body: { table: 'users', data: payload }
-      });
-    }
-    // Final response handling
-    if (response?.success) {
-      dispatch({ notification: isEditMode ? "User updated successfully!" : "All users created successfully!" });
-      window.location.pathname = isEditMode ? '/user/list' : '/user/create';
-    } else if (response) {
-      dispatch({ notification: response.message });
-    }
-  } catch (error) {
-    dispatch({ notification: error instanceof Error ? error.message : 'Error during operation' });
-  }
-};
-
-
-const renderDepartments = () => state.departments_lists?.map((d, i) => <Option key={i} value={d.id} label={d.department_name} />);
-const renderRoles = () => state.roles?.map((r, i) => <Option key={i} value={r.id} label={r.name} />);
-const renderDesignations = () => designations.map((d, i) => <Option key={i} value={d.name} label={d.name} />);
 
   return (
     <section className="section">
@@ -139,60 +109,79 @@ const renderDesignations = () => designations.map((d, i) => <Option key={i} valu
             <div className="card-body">
               <form className="form" onSubmit={handleSubmit}>
                 <div className="row">
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Full Name" name="full_name" value = {state.full_name} error={state.full_name_error} onChange={handleInputChange} placeholder="Enter full name" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Username" name="user_name" value = {state.user_name} error={state.user_name_error} onChange={handleInputChange} placeholder="Enter username" disabled={isEditMode} />
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Address" name="address" value= {state.address} error={state.address_error} onChange={handleInputChange} placeholder="Enter address" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Phone" name="phone_number" value ={state.phone_number} error={state.phone_number_error} onChange={handleInputChange} placeholder="Number e.g. +255712345678" />
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Input type="text" autoComplete="off" label="Email" name="email" value= {state.email} error={state.email_error} onChange={handleInputChange} placeholder="Enter email" disabled={isEditMode}/>
-                  </div></div>
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="department_id" value={state.department_id || ""} onChange={handleInputChange} label="Department" error={state.department_error}>
-                      <Option value="" label="Select department" />
-                      {renderDepartments()}
-                    </Select>
-                  </div></div>
 
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="gender" value={state.gender || ""} onChange={handleInputChange} label="Gender" error={state.gender_error} disabled={isEditMode}>
-                      <Option value="" label="Select Gender" />
-                      <Option value="male" label="Male" />
-                      <Option value="female" label="Female" />
-                    </Select>
-                  </div></div>
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="text" autoComplete="off" label="Product Name" name="product_name" value={state.product_name} error={state.product_name_error} onChange={handleInputChange} placeholder="Enter product name" />
+                    </div>
+                  </div>
 
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="role_id" value={state.role_id || ""} onChange={handleInputChange} label="Role" error={state.role_id_error} disabled={!permission(3001)}>
-                      <Option value="" label="Select role" />
-                      {renderRoles()}
-                    </Select>
-                  </div></div>
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="text" autoComplete="off" label="Product Code" name="product_code" value={state.product_code} error={state.product_code_error} onChange={handleInputChange} placeholder="Enter product code" />
+                    </div>
+                  </div>
 
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="designation" value={state.designation || ""} onChange={handleInputChange} label="Designation" error={state.designation_error}>
-                      <Option value="" label="Select designation" />
-                      {renderDesignations()}
-                    </Select>
-                  </div></div>
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="text" autoComplete="off" label="Location" name="location" value={state.location} error={state.location_error} onChange={handleInputChange} placeholder="Enter location" />
+                    </div>
+                  </div>
 
-                  <div className="col-md-4 col-12"><div className="form-group">
-                    <Select name="status" value={state.status || ""} onChange={handleInputChange} label="Status" error={state.status_error}>
-                      <Option value="" label="Select status" />
-                      <Option value="active" label="Active" />
-                      <Option value="inactive" label="Inactive" />
-                    </Select>
-                  </div></div>
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="text" autoComplete="off" label="Unit of Measure" name="unit_of_measure" value={state.unit_of_measure} error={state.unit_of_measure_error} onChange={handleInputChange} placeholder="e.g. pcs, kg" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Available Quantity" name="available" value={state.available} error={state.available_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Buying Price" name="buying_price" value={state.buying_price} error={state.buying_price_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Selling Price" name="selling_price" value={state.selling_price} error={state.selling_price_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Tax (%)" name="tax" value={state.tax} error={state.tax_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Profit Rate (%)" name="profit_rate" value={state.profit_rate} error={state.profit_rate_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Input type="number" autoComplete="off" label="Discount (%)" name="discount" value={state.discount} error={state.discount_error} onChange={handleInputChange} placeholder="0.000" step="0.001" />
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 col-12">
+                    <div className="form-group">
+                      <Select name="status" value={state.status || ""} onChange={handleInputChange} label="Status" error={state.status_error}>
+                        <Option value="" label="Select status" />
+                        <Option value="active" label="Active" />
+                        <Option value="inactive" label="Inactive" />
+                      </Select>
+                    </div>
+                  </div>
 
                   <div className="col-12 d-flex justify-content-center mt-3">
-                    <Button className="btn btn-info" loading={state.loading} title={isEditMode ? "Edit" : "Save"} />
+                    <Button className="btn btn-info" loading={state.loading} title={isEditMode ? "Update" : "Save"} />
                   </div>
 
                 </div>
@@ -205,4 +194,4 @@ const renderDesignations = () => designations.map((d, i) => <Option key={i} valu
   );
 });
 
-export default Create;
+export default CreateProduct;

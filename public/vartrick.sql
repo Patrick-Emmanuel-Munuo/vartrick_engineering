@@ -91,33 +91,26 @@ CREATE TABLE `product` (
   `selling_price` FLOAT(12,3) DEFAULT 0.000,
   `tax` FLOAT(12,3) DEFAULT 0.000,
   `profit_rate` FLOAT(12,3) DEFAULT 0.000,
-  `discount` FLOAT(2,3) DEFAULT 0.000,
+  `discount` FLOAT(5,3) DEFAULT 0.000 COMMENT 'Discount percentage with 3 decimals, max 100.000%',
   `created_by` INT(11) DEFAULT NULL,
   `created_date` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_by` INT(11) DEFAULT NULL,
   `updated_date` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+  
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- =========================
--- Table: messages
--- =========================
-CREATE TABLE `messages` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `sender_id` INT(11) NOT NULL,
-  `receiver_id` INT(11) NOT NULL,
-  `text` VARCHAR(1000) NOT NULL,
-  `created_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `respond_id` INT(11) DEFAULT NULL,
-  `status` VARCHAR(30) DEFAULT 'sent',
-  `description` VARCHAR(100) DEFAULT NULL,
-  `delivery` TINYINT(1) DEFAULT 0,
-  `deleted` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `product` 
+(`product_name`, `description`, `product_code`, `status`, `location`, `unit_of_measure`, `available`, `buying_price`, `selling_price`, `tax`, `profit_rate`, `discount`, `created_by`) 
+VALUES
+('Electric Motor', 'High efficiency electric motor', 'EM-001', 'active', 'Warehouse A', 'pcs', 50.000, 150.500, 200.750, 18.000, 25.000, 5.000, 15),
+('LED Bulb 12W', 'Energy saving LED bulb', 'LB-012', 'active', 'Warehouse B', 'pcs', 200.000, 2.500, 3.750, 18.000, 50.000, 0.000, 15),
+('Copper Wire 1mm', 'High quality copper wire', 'CW-001', 'active', 'Warehouse C', 'meters', 1000.000, 0.800, 1.200, 18.000, 50.000, 0.000, 15),
+('Circuit Breaker 10A', 'Single pole circuit breaker', 'CB-010', 'active', 'Warehouse A', 'pcs', 150.000, 5.500, 8.250, 18.000, 33.000, 2.500, 15),
+('Fuse 5A', 'Fast acting fuse', 'F-005', 'active', 'Warehouse B', 'pcs', 500.000, 0.300, 0.450, 18.000, 50.000, 0.000, 15);
 
 -- =========================
 -- Table: selling_product
@@ -141,7 +134,7 @@ CREATE TABLE `selling_product` (
   `invoice_printed` TINYINT(1) DEFAULT 0,
   `invoice_printed_by` INT(11) DEFAULT NULL,
   `invoice_printed_date` DATETIME DEFAULT NULL,
-  `invoice_pdf` VARCHAR(255) DEFAULT NULL
+  `invoice_pdf` VARCHAR(255) DEFAULT NULL,
   
   -- Payment info
   `payment_method` VARCHAR(50) DEFAULT NULL,
@@ -169,9 +162,55 @@ CREATE TABLE `selling_product` (
   FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`updated_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`invoice_printed_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
-  FOREIGN KEY (`payment_approval_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
+  FOREIGN KEY (`payment_approval_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
   
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+INSERT INTO `selling_product` 
+(`customer_name`, `customer_phone`, `customer_email`, `customer_address`, `invoice_number`, `bill_amount`, `tax_rate`, `tax`, `items`, `invoice_amount`, `invoice_printed`, `invoice_pdf`, `payment_method`, `payment_comment`, `payment_approval`, `paid_amount`, `balance`, `status`, `created_by`)
+VALUES
+(
+ 'John Doe', '+255712345678', 'john@example.com', 'Moshi Town', 'INV-001', 
+ 500.000, 18.000, 90.000, 
+ '[{"product_id":1,"name":"Electric Motor","qty":2,"unit_price":200.375,"total":400.750},{"product_id":2,"name":"LED Bulb 12W","qty":25,"unit_price":3.750,"total":93.750}]',
+ 590.500, 0, '/invoices/INV-001.pdf', 'Cash', 'Paid in full', 1, 590.500, 0.000, 'completed', 15
+),
+(
+ 'Jane Smith', '+255798765432', 'jane@example.com', 'Dar es Salaam', 'INV-002', 
+ 250.000, 18.000, 45.000, 
+ '[{"product_id":3,"name":"Copper Wire 1mm","qty":100,"unit_price":1.200,"total":120.000},{"product_id":5,"name":"Fuse 5A","qty":100,"unit_price":0.450,"total":45.000}]',
+ 295.000, 1, '/invoices/INV-002.pdf', 'Mpesa', 'Partial payment', 0, 150.000, 145.000, 'pending', 15
+),
+(
+ 'Michael Lee', '+255761234567', 'michael@example.com', 'Dodoma', 'INV-003', 
+ 300.000, 18.000, 54.000, 
+ '[{"product_id":4,"name":"Circuit Breaker 10A","qty":10,"unit_price":8.250,"total":82.500},{"product_id":2,"name":"LED Bulb 12W","qty":10,"unit_price":3.750,"total":37.500}]',
+ 391.500, 0, '/invoices/INV-003.pdf', 'Bank Transfer', 'Paid full via bank', 1, 391.500, 0.000, 'completed', 15
+);
+
+
+
+-- =========================
+-- Table: messages
+-- =========================
+CREATE TABLE `messages` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `sender_id` INT(11) NOT NULL,
+  `receiver_id` INT(11) NOT NULL,
+  `text` VARCHAR(1000) NOT NULL,
+  `created_date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `respond_id` INT(11) DEFAULT NULL,
+  `status` VARCHAR(30) DEFAULT 'sent',
+  `description` VARCHAR(100) DEFAULT NULL,
+  `delivery` TINYINT(1) DEFAULT 0,
+  `deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 
 -- =========================
 -- Table: settings
