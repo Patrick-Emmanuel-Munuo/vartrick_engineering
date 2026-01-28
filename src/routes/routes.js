@@ -29,54 +29,54 @@ const routes = [
     {
         path: '/product/create',
         guest: false,
-        component: lazy(() => import('../pages/dashboard'))
+        component: lazy(() => import('../pages/product/create'))
     },
     {
         path: '/product/supply',
         guest: false,
-        component: lazy(() => import('../pages/dashboard'))
+        component: lazy(() => import('../pages/product/supply'))
     },
     {
         path: '/product/bulk-create',
         guest: false,
-        component: lazy(() => import('../pages/dashboard'))
+        component: lazy(() => import('../pages/product/bulk'))
     },
     {
         path: '/product/stock-update',
         guest: false,
-        component: lazy(() => import('../pages/dashboard'))
+        component: lazy(() => import('../pages/product/stock'))
     },
     {
         path: '/product/list',
         guest: false,
-        component: lazy(() => import('../pages/dashboard'))
+        component: lazy(() => import('../pages/product/list'))
     },
 
     // ===== Selling =====
     { 
         path: '/selling/list', 
         guest: false, 
-        component: lazy(() => import('../pages/dashboard')) 
+        component: lazy(() => import('../pages/selling/list')) 
     },
     { 
         path: '/selling/create', 
         guest: false, 
-        component: lazy(() => import('../pages/dashboard')) 
+        component: lazy(() => import('../pages/selling/create')) 
     },
     { 
         path: '/selling/customer', 
         guest: false, 
-        component: lazy(() => import('../pages/dashboard')) 
+        component: lazy(() => import('../pages/selling/customer')) 
     },
     { 
         path: '/selling/invoice', 
         guest: false, 
-        component: lazy(() => import('../pages/dashboard')) 
+        component: lazy(() => import('../pages/selling/invoice')) 
     },
     { 
         path: '/selling/report', 
         guest: false, 
-        component: lazy(() => import('../pages/dashboard')) 
+        component: lazy(() => import('../pages/selling/report')) 
     },
     // ===== Roles =====
     {
