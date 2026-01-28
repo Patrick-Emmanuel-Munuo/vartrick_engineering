@@ -132,7 +132,7 @@ const CreateSellingProduct = React.memo((props) => {
       customer_email: state.customer_email,
       customer_address: state.customer_address,
       invoice_number: state.invoice_number,
-      items: cart,
+      items: JSON.stringify(cart),
       bill_amount: totals.bill_amount,
       tax_rate: taxRate,
       tax: totals.tax,
