@@ -7,10 +7,16 @@ import Header from './header'
 import Footer from './footer'
 /* guest (unauthenticated) */
 export const GuestLayout= React.memo((props) => (
-    <main className="main-out">
+    <> 
+    <Sidebar application = {props.application} toggleSidebar ={props.application.toggleSidebar} authenticate={props.authenticate}/>
+    <Header application={props.application} />
+     {/*Application main menu components*/}
+    <main className="main">
         {props.application.state.notification ? <Notification application = {props.application} message={props.application.state.notification.toString()} /> : null}
         {props.children}
     </main>
+    <Footer/>
+    </>
 ))
 
 /* authenticated */
